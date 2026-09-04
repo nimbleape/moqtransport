@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mengelbart/moqtransport/internal/wire"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
@@ -19,6 +20,38 @@ func acceptedControlStream(s *Session) *remoteControlStream {
 	s.controlStreamLock.Lock()
 	defer s.controlStreamLock.Unlock()
 	return s.remoteControlStream
+}
+
+// capturingWriter records the control messages written to it.
+type capturingWriter struct {
+	messages []wire.ControlMessage
+}
+
+func (w *capturingWriter) Write(msg wire.ControlMessage) error {
+	w.messages = append(w.messages, msg)
+	return nil
+}
+
+// The SETUP message the session sends announces the MoQT implementation it
+// speaks.
+func TestSendSetupIncludesImplementationParameter(t *testing.T) {
+	writer := &capturingWriter{}
+	session := &Session{
+		logger:             defaultLogger,
+		conn:               newTestConnection(t),
+		localControlStream: newLocalControlStream(writer),
+		path:               "/path",
+	}
+
+	session.sendSetup()
+
+	require.Len(t, writer.messages, 1)
+	setup, ok := writer.messages[0].(*wire.Setup)
+	require.True(t, ok)
+	assert.Contains(t, setup.Options, wire.KeyValuePair{
+		Type:  wire.MoqtImplementationParameterKey,
+		Bytes: []byte(MOQT18.String()),
+	})
 }
 
 // A session has exactly one remote control stream. A second one from the peer

@@ -141,10 +141,13 @@ func (s *Session) Context() context.Context {
 
 func (s *Session) sendSetup() {
 	setup := &wire.Setup{}
+	setup.Options = []wire.KeyValuePair{
+		{Type: wire.MoqtImplementationParameterKey, Bytes: []byte(s.conn.ApplicationProtocol().String())},
+	}
 	if s.conn.Protocol() == ProtocolQUIC {
-		setup.Options = []wire.KeyValuePair{
-			{Type: wire.PathParameterKey, Bytes: []byte(s.path)},
-		}
+		setup.Options = append(setup.Options, wire.KeyValuePair{
+			Type: wire.PathParameterKey, Bytes: []byte(s.path),
+		})
 	}
 	if err := s.localControlStream.write(setup); err != nil {
 		s.handleReaderError(err)
