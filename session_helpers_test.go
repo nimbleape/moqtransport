@@ -9,7 +9,7 @@ import (
 
 func TestValidatePathParameter(t *testing.T) {
 	path := wire.KeyValuePair{Type: wire.PathParameterKey, Bytes: []byte("/path")}
-	other := wire.KeyValuePair{Type: wire.MaxRequestIDParameterKey, Varint: 1}
+	other := wire.KeyValuePair{Type: wire.MoqtImplementationParameterKey, Bytes: []byte(MOQT18.String())}
 
 	cases := []struct {
 		name           string

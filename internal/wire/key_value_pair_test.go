@@ -50,19 +50,11 @@ func TestAppendKeyValuePairs(t *testing.T) {
 		},
 		{
 			pairs: []KeyValuePair{{
-				Type:   MaxRequestIDParameterKey,
-				Varint: uint64(2),
+				Type:  MoqtImplementationParameterKey,
+				Bytes: []byte("moqt-18"),
 			}},
 			buf:    []byte{},
-			expect: []byte{0x02, 0x02},
-		},
-		{
-			pairs: []KeyValuePair{{
-				Type:   MaxRequestIDParameterKey,
-				Varint: uint64(3),
-			}},
-			buf:    []byte{0x01, 0x02},
-			expect: []byte{0x01, 0x02, 0x02, 0x03},
+			expect: append([]byte{0x07, 0x07}, "moqt-18"...),
 		},
 		{
 			pairs: []KeyValuePair{
@@ -108,13 +100,13 @@ func TestParseKeyValuePair(t *testing.T) {
 		consumed int64
 	}{
 		{
-			data: []byte{byte(MaxRequestIDParameterKey), 0x01},
+			data: append([]byte{byte(MoqtImplementationParameterKey), 0x07}, "moqt-18"...),
 			expect: KeyValuePair{
-				Type:   MaxRequestIDParameterKey,
-				Varint: uint64(1),
+				Type:  MoqtImplementationParameterKey,
+				Bytes: []byte("moqt-18"),
 			},
 			err:      nil,
-			consumed: 2,
+			consumed: 9,
 		},
 		{
 			data: append([]byte{byte(PathParameterKey), 11}, "/path/param"...),
